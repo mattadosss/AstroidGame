@@ -51,9 +51,9 @@ class Player:
             self.image = None
     
     def move(self, keys):
-        if keys[pygame.K_LEFT] and self.x > 0:
+        if (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.x > 0:
             self.x -= self.speed
-        if keys[pygame.K_RIGHT] and self.x < SCREEN_WIDTH - self.width:
+        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.x < SCREEN_WIDTH - self.width:
             self.x += self.speed
         
         self.rect.x = self.x
@@ -128,42 +128,51 @@ class Game:
         
         # Game state
         self.running = True
+        self.game_over = False
+        self.score = 0
+        self.font = pygame.font.Font(None, 74)
+        self.small_font = pygame.font.Font(None, 36)
+        self.score_font = pygame.font.Font(None, 48)
     
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE and not self.game_over:
                     # Shoot bullet
                     bullet_x = self.player.x + self.player.width // 2 - BULLET_WIDTH // 2
                     bullet_y = self.player.y
                     self.bullets.append(Bullet(bullet_x, bullet_y))
+                elif event.key == pygame.K_r and self.game_over:
+                    # Restart game
+                    self.restart_game()
     
     def update(self):
-        # Handle player movement
-        keys = pygame.key.get_pressed()
-        self.player.move(keys)
-        
-        # Update bullets
-        for bullet in self.bullets[:]:
-            bullet.move()
-            if bullet.is_off_screen():
-                self.bullets.remove(bullet)
-        
-        # Spawn asteroids
-        if random.random() < ASTEROID_SPAWN_RATE:
-            asteroid_x = random.randint(0, SCREEN_WIDTH - ASTEROID_WIDTH)
-            self.asteroids.append(Asteroid(asteroid_x, -ASTEROID_HEIGHT))
-        
-        # Update asteroids
-        for asteroid in self.asteroids[:]:
-            asteroid.move()
-            if asteroid.is_off_screen():
-                self.asteroids.remove(asteroid)
-        
-        # Collision detection (placeholder)
-        self.check_collisions()
+        if not self.game_over:
+            # Handle player movement
+            keys = pygame.key.get_pressed()
+            self.player.move(keys)
+            
+            # Update bullets
+            for bullet in self.bullets[:]:
+                bullet.move()
+                if bullet.is_off_screen():
+                    self.bullets.remove(bullet)
+            
+            # Spawn asteroids
+            if random.random() < ASTEROID_SPAWN_RATE:
+                asteroid_x = random.randint(0, SCREEN_WIDTH - ASTEROID_WIDTH)
+                self.asteroids.append(Asteroid(asteroid_x, -ASTEROID_HEIGHT))
+            
+            # Update asteroids
+            for asteroid in self.asteroids[:]:
+                asteroid.move()
+                if asteroid.is_off_screen():
+                    self.asteroids.remove(asteroid)
+            
+            # Collision detection
+            self.check_collisions()
     
     def check_collisions(self):
         # Check bullet-asteroid collisions
@@ -174,13 +183,13 @@ class Game:
                         self.bullets.remove(bullet)
                     if asteroid in self.asteroids:
                         self.asteroids.remove(asteroid)
+                        self.score += 1  # Add 10 points for each asteroid destroyed
                     break
         
         # Check player-asteroid collisions
         for asteroid in self.asteroids[:]:
             if self.player.rect.colliderect(asteroid.rect):
-                # Game over logic can be added here
-                pass
+                self.game_over = True
     
     def draw(self):
         self.screen.fill(BLACK)
@@ -194,7 +203,44 @@ class Game:
         for asteroid in self.asteroids:
             asteroid.draw(self.screen)
         
+        # Draw score
+        self.draw_score()
+        
+        # Draw game over screen
+        if self.game_over:
+            self.draw_game_over()
+        
         pygame.display.flip()
+    
+    def draw_score(self):
+        score_text = self.score_font.render(f"Score: {self.score}", True, WHITE)
+        self.screen.blit(score_text, (10, 10))
+    
+    def draw_game_over(self):
+        # Create a semi-transparent overlay
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        overlay.set_alpha(128)
+        overlay.fill(BLACK)
+        self.screen.blit(overlay, (0, 0))
+        
+        # Draw "GAME OVER" text
+        game_over_text = self.font.render("GAME OVER", True, RED)
+        text_rect = game_over_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+        self.screen.blit(game_over_text, text_rect)
+        
+        # Draw restart instruction
+        restart_text = self.small_font.render("Press 'R' to restart", True, WHITE)
+        restart_rect = restart_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
+        self.screen.blit(restart_text, restart_rect)
+    
+    def restart_game(self):
+        # Reset game state
+        self.game_over = False
+        self.score = 0
+        self.player = Player(SCREEN_WIDTH // 2 - PLAYER_WIDTH // 2, 
+                           SCREEN_HEIGHT - PLAYER_HEIGHT - 10)
+        self.bullets = []
+        self.asteroids = []
     
     def run(self):
         while self.running:
