@@ -53,7 +53,7 @@ ASTEROID_SPAWN_RATE = 0.02  # Probability per frame
 POWERUP_SPEED = 2
 POWERUP_WIDTH = 30
 POWERUP_HEIGHT = 30
-POWERUP_POINTS = 10
+POWERUP_POINTS = 3
 
 # Difficulty progression settings
 POINTS_PER_LEVEL = 10  # Points needed to increase level
