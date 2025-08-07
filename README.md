@@ -20,9 +20,9 @@ A fast-paced 2D arcade-style space shooter built with **Pygame**. Destroy astero
 
 ##  Screenshots
 
-![Menu](assets/screenshots/menu.png)
-![Gameplay](assets/screenshots/gameplay.png)
-![Game Over](assets/screenshots/gameover.png)
+![Menu](screenshots/menu.png)
+![Gameplay](screenshots/gameplay.png)
+![Game Over](screenshots/gameover.png)
 
 ---
 
